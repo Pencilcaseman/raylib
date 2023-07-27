@@ -932,6 +932,8 @@ typedef bool (*SaveFileTextCallback)(const char *fileName, char *text); // FileI
 extern "C" {            // Prevents name mangling of functions
 #endif
 
+RLAPI CoreData *RL_GetCoreData(void); // Get internal data reference
+
 // Window-related functions
 RLAPI void RL_InitWindow(int width, int height, const char *title);  // Initialize window and OpenGL context
 RLAPI bool RL_WindowShouldClose(void);                               // Check if KEY_ESCAPE pressed or Close icon pressed

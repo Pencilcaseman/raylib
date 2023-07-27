@@ -517,6 +517,11 @@ RLAPI const char *raylib_version = RAYLIB_VERSION;  // raylib version exported s
 
 static CoreData CORE = { 0 };               // Global CORE state context
 
+// Get pointer to global CORE state context
+RLAPI CoreData *RL_GetCoreData() {
+    return &CORE;
+}
+
 #if defined(SUPPORT_SCREEN_CAPTURE)
 static int screenshotCounter = 0;           // Screenshots counter
 #endif

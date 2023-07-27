@@ -932,6 +932,7 @@ typedef bool (*SaveFileTextCallback)(const char *fileName, char *text); // FileI
 extern "C" {            // Prevents name mangling of functions
 #endif
 
+struct CoreData;        // Core global variables context
 RLAPI CoreData *RL_GetCoreData(void); // Get internal data reference
 
 // Window-related functions

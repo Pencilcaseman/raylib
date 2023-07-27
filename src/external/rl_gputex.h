@@ -185,7 +185,7 @@ void *rl_load_dds_from_memory(const unsigned char *file_data, unsigned int file_
 
                     memcpy(image_data, file_data_ptr, data_size);
 
-                    *format = PIXELFORMAT_UNCOMPRESSED_R5G6B5;
+                    *format = RLGL_PIXELFORMAT_UNCOMPRESSED_R5G6B5;
                 }
                 else if (header->ddspf.flags == 0x41)           // With alpha channel
                 {
@@ -206,7 +206,7 @@ void *rl_load_dds_from_memory(const unsigned char *file_data, unsigned int file_
                             ((unsigned short *)image_data)[i] += alpha;
                         }
 
-                        *format = PIXELFORMAT_UNCOMPRESSED_R5G5B5A1;
+                        *format = RLGL_PIXELFORMAT_UNCOMPRESSED_R5G5B5A1;
                     }
                     else if (header->ddspf.a_bit_mask == 0xf000)   // 4bit alpha
                     {
@@ -225,7 +225,7 @@ void *rl_load_dds_from_memory(const unsigned char *file_data, unsigned int file_
                             ((unsigned short *)image_data)[i] += alpha;
                         }
 
-                        *format = PIXELFORMAT_UNCOMPRESSED_R4G4B4A4;
+                        *format = RLGL_PIXELFORMAT_UNCOMPRESSED_R4G4B4A4;
                     }
                 }
             }
@@ -236,7 +236,7 @@ void *rl_load_dds_from_memory(const unsigned char *file_data, unsigned int file_
 
                 memcpy(image_data, file_data_ptr, data_size);
 
-                *format = PIXELFORMAT_UNCOMPRESSED_R8G8B8;
+                *format = RLGL_PIXELFORMAT_UNCOMPRESSED_R8G8B8;
             }
             else if (header->ddspf.flags == 0x41 && header->ddspf.rgb_bit_count == 32) // DDS_RGBA, no compressed
             {
@@ -257,7 +257,7 @@ void *rl_load_dds_from_memory(const unsigned char *file_data, unsigned int file_
                     ((unsigned char *)image_data)[i + 2] = blue;
                 }
 
-                *format = PIXELFORMAT_UNCOMPRESSED_R8G8B8A8;
+                *format = RLGL_PIXELFORMAT_UNCOMPRESSED_R8G8B8A8;
             }
             else if (((header->ddspf.flags == 0x04) || (header->ddspf.flags == 0x05)) && (header->ddspf.fourcc > 0)) // Compressed
             {
@@ -275,11 +275,11 @@ void *rl_load_dds_from_memory(const unsigned char *file_data, unsigned int file_
                 {
                     case FOURCC_DXT1:
                     {
-                        if (header->ddspf.flags == 0x04) *format = PIXELFORMAT_COMPRESSED_DXT1_RGB;
-                        else *format = PIXELFORMAT_COMPRESSED_DXT1_RGBA;
+                        if (header->ddspf.flags == 0x04) *format = RLGL_PIXELFORMAT_COMPRESSED_DXT1_RGB;
+                        else *format = RLGL_PIXELFORMAT_COMPRESSED_DXT1_RGBA;
                     } break;
-                    case FOURCC_DXT3: *format = PIXELFORMAT_COMPRESSED_DXT3_RGBA; break;
-                    case FOURCC_DXT5: *format = PIXELFORMAT_COMPRESSED_DXT5_RGBA; break;
+                    case FOURCC_DXT3: *format = RLGL_PIXELFORMAT_COMPRESSED_DXT3_RGBA; break;
+                    case FOURCC_DXT5: *format = RLGL_PIXELFORMAT_COMPRESSED_DXT5_RGBA; break;
                     default: break;
                 }
             }
@@ -357,9 +357,9 @@ void *rl_load_pkm_from_memory(const unsigned char *file_data, unsigned int file_
 
             memcpy(image_data, file_data_ptr, data_size);
 
-            if (header->format == 0) *format = PIXELFORMAT_COMPRESSED_ETC1_RGB;
-            else if (header->format == 1) *format = PIXELFORMAT_COMPRESSED_ETC2_RGB;
-            else if (header->format == 3) *format = PIXELFORMAT_COMPRESSED_ETC2_EAC_RGBA;
+            if (header->format == 0) *format = RLGL_PIXELFORMAT_COMPRESSED_ETC1_RGB;
+            else if (header->format == 1) *format = RLGL_PIXELFORMAT_COMPRESSED_ETC2_RGB;
+            else if (header->format == 3) *format = RLGL_PIXELFORMAT_COMPRESSED_ETC2_EAC_RGBA;
         }
     }
 
@@ -436,9 +436,9 @@ void *rl_load_ktx_from_memory(const unsigned char *file_data, unsigned int file_
 
             memcpy(image_data, file_data_ptr, data_size);
 
-            if (header->gl_internal_format == 0x8D64) *format = PIXELFORMAT_COMPRESSED_ETC1_RGB;
-            else if (header->gl_internal_format == 0x9274) *format = PIXELFORMAT_COMPRESSED_ETC2_RGB;
-            else if (header->gl_internal_format == 0x9278) *format = PIXELFORMAT_COMPRESSED_ETC2_EAC_RGBA;
+            if (header->gl_internal_format == 0x8D64) *format = RLGL_PIXELFORMAT_COMPRESSED_ETC1_RGB;
+            else if (header->gl_internal_format == 0x9274) *format = RLGL_PIXELFORMAT_COMPRESSED_ETC2_RGB;
+            else if (header->gl_internal_format == 0x9278) *format = RLGL_PIXELFORMAT_COMPRESSED_ETC2_EAC_RGBA;
 
             // TODO: Support uncompressed data formats? Right now it returns format = 0!
         }
@@ -513,7 +513,7 @@ int rl_save_ktx(const char *file_name, void *data, int width, int height, int fo
     rlGetGlTextureFormats(format, &header.gl_internal_format, &header.gl_format, &header.gl_type);   // rlgl module function
     header.gl_base_internal_format = header.gl_format;    // KTX 1.1 only
 
-    // NOTE: We can save into a .ktx all PixelFormats supported by raylib, including compressed formats like DXT, ETC or ASTC
+    // NOTE: We can save into a .ktx all RLGL_PIXELFORMATs supported by raylib, including compressed formats like DXT, ETC or ASTC
 
     if (header.gl_format == -1) LOG("WARNING: IMAGE: GL format not supported for KTX export (%i)", header.gl_format);
     else
@@ -604,8 +604,8 @@ void *rl_load_pvr_from_memory(const unsigned char *file_data, unsigned int file_
     typedef struct {
         char id[4];
         unsigned int flags;
-        unsigned char channels[4];      // pixelFormat high part
-        unsigned char channel_depth[4];  // pixelFormat low part
+        unsigned char channels[4];      // RLGL_PIXELFORMAT high part
+        unsigned char channel_depth[4];  // RLGL_PIXELFORMAT low part
         unsigned int color_space;
         unsigned int channel_type;
         unsigned int height;
@@ -650,24 +650,24 @@ void *rl_load_pvr_from_memory(const unsigned char *file_data, unsigned int file_
                 *mips = header->num_mipmaps;
 
                 // Check data format
-                if (((header->channels[0] == 'l') && (header->channels[1] == 0)) && (header->channel_depth[0] == 8)) *format = PIXELFORMAT_UNCOMPRESSED_GRAYSCALE;
-                else if (((header->channels[0] == 'l') && (header->channels[1] == 'a')) && ((header->channel_depth[0] == 8) && (header->channel_depth[1] == 8))) *format = PIXELFORMAT_UNCOMPRESSED_GRAY_ALPHA;
+                if (((header->channels[0] == 'l') && (header->channels[1] == 0)) && (header->channel_depth[0] == 8)) *format = RLGL_PIXELFORMAT_UNCOMPRESSED_GRAYSCALE;
+                else if (((header->channels[0] == 'l') && (header->channels[1] == 'a')) && ((header->channel_depth[0] == 8) && (header->channel_depth[1] == 8))) *format = RLGL_PIXELFORMAT_UNCOMPRESSED_GRAY_ALPHA;
                 else if ((header->channels[0] == 'r') && (header->channels[1] == 'g') && (header->channels[2] == 'b'))
                 {
                     if (header->channels[3] == 'a')
                     {
-                        if ((header->channel_depth[0] == 5) && (header->channel_depth[1] == 5) && (header->channel_depth[2] == 5) && (header->channel_depth[3] == 1)) *format = PIXELFORMAT_UNCOMPRESSED_R5G5B5A1;
-                        else if ((header->channel_depth[0] == 4) && (header->channel_depth[1] == 4) && (header->channel_depth[2] == 4) && (header->channel_depth[3] == 4)) *format = PIXELFORMAT_UNCOMPRESSED_R4G4B4A4;
-                        else if ((header->channel_depth[0] == 8) && (header->channel_depth[1] == 8) && (header->channel_depth[2] == 8) && (header->channel_depth[3] == 8)) *format = PIXELFORMAT_UNCOMPRESSED_R8G8B8A8;
+                        if ((header->channel_depth[0] == 5) && (header->channel_depth[1] == 5) && (header->channel_depth[2] == 5) && (header->channel_depth[3] == 1)) *format = RLGL_PIXELFORMAT_UNCOMPRESSED_R5G5B5A1;
+                        else if ((header->channel_depth[0] == 4) && (header->channel_depth[1] == 4) && (header->channel_depth[2] == 4) && (header->channel_depth[3] == 4)) *format = RLGL_PIXELFORMAT_UNCOMPRESSED_R4G4B4A4;
+                        else if ((header->channel_depth[0] == 8) && (header->channel_depth[1] == 8) && (header->channel_depth[2] == 8) && (header->channel_depth[3] == 8)) *format = RLGL_PIXELFORMAT_UNCOMPRESSED_R8G8B8A8;
                     }
                     else if (header->channels[3] == 0)
                     {
-                        if ((header->channel_depth[0] == 5) && (header->channel_depth[1] == 6) && (header->channel_depth[2] == 5)) *format = PIXELFORMAT_UNCOMPRESSED_R5G6B5;
-                        else if ((header->channel_depth[0] == 8) && (header->channel_depth[1] == 8) && (header->channel_depth[2] == 8)) *format = PIXELFORMAT_UNCOMPRESSED_R8G8B8;
+                        if ((header->channel_depth[0] == 5) && (header->channel_depth[1] == 6) && (header->channel_depth[2] == 5)) *format = RLGL_PIXELFORMAT_UNCOMPRESSED_R5G6B5;
+                        else if ((header->channel_depth[0] == 8) && (header->channel_depth[1] == 8) && (header->channel_depth[2] == 8)) *format = RLGL_PIXELFORMAT_UNCOMPRESSED_R8G8B8;
                     }
                 }
-                else if (header->channels[0] == 2) *format = PIXELFORMAT_COMPRESSED_PVRT_RGB;
-                else if (header->channels[0] == 3) *format = PIXELFORMAT_COMPRESSED_PVRT_RGBA;
+                else if (header->channels[0] == 2) *format = RLGL_PIXELFORMAT_COMPRESSED_PVRT_RGB;
+                else if (header->channels[0] == 3) *format = RLGL_PIXELFORMAT_COMPRESSED_PVRT_RGBA;
 
                 file_data_ptr += header->metadata_size;    // Skip meta data header
 
@@ -675,15 +675,15 @@ void *rl_load_pvr_from_memory(const unsigned char *file_data, unsigned int file_
                 int bpp = 0;
                 switch (*format)
                 {
-                    case PIXELFORMAT_UNCOMPRESSED_GRAYSCALE: bpp = 8; break;
-                    case PIXELFORMAT_UNCOMPRESSED_GRAY_ALPHA:
-                    case PIXELFORMAT_UNCOMPRESSED_R5G5B5A1:
-                    case PIXELFORMAT_UNCOMPRESSED_R5G6B5:
-                    case PIXELFORMAT_UNCOMPRESSED_R4G4B4A4: bpp = 16; break;
-                    case PIXELFORMAT_UNCOMPRESSED_R8G8B8A8: bpp = 32; break;
-                    case PIXELFORMAT_UNCOMPRESSED_R8G8B8: bpp = 24; break;
-                    case PIXELFORMAT_COMPRESSED_PVRT_RGB:
-                    case PIXELFORMAT_COMPRESSED_PVRT_RGBA: bpp = 4; break;
+                    case RLGL_PIXELFORMAT_UNCOMPRESSED_GRAYSCALE: bpp = 8; break;
+                    case RLGL_PIXELFORMAT_UNCOMPRESSED_GRAY_ALPHA:
+                    case RLGL_PIXELFORMAT_UNCOMPRESSED_R5G5B5A1:
+                    case RLGL_PIXELFORMAT_UNCOMPRESSED_R5G6B5:
+                    case RLGL_PIXELFORMAT_UNCOMPRESSED_R4G4B4A4: bpp = 16; break;
+                    case RLGL_PIXELFORMAT_UNCOMPRESSED_R8G8B8A8: bpp = 32; break;
+                    case RLGL_PIXELFORMAT_UNCOMPRESSED_R8G8B8: bpp = 24; break;
+                    case RLGL_PIXELFORMAT_COMPRESSED_PVRT_RGB:
+                    case RLGL_PIXELFORMAT_COMPRESSED_PVRT_RGBA: bpp = 4; break;
                     default: break;
                 }
 
@@ -756,8 +756,8 @@ void *rl_load_astc_from_memory(const unsigned char *file_data, unsigned int file
 
                 memcpy(image_data, file_data_ptr, data_size);
 
-                if (bpp == 8) *format = PIXELFORMAT_COMPRESSED_ASTC_4x4_RGBA;
-                else if (bpp == 2) *format = PIXELFORMAT_COMPRESSED_ASTC_8x8_RGBA;
+                if (bpp == 8) *format = RLGL_PIXELFORMAT_COMPRESSED_ASTC_4x4_RGBA;
+                else if (bpp == 2) *format = RLGL_PIXELFORMAT_COMPRESSED_ASTC_8x8_RGBA;
             }
             else LOG("WARNING: IMAGE: ASTC block size configuration not supported");
         }
@@ -778,27 +778,27 @@ static int get_pixel_data_size(int width, int height, int format)
 
     switch (format)
     {
-        case PIXELFORMAT_UNCOMPRESSED_GRAYSCALE: bpp = 8; break;
-        case PIXELFORMAT_UNCOMPRESSED_GRAY_ALPHA:
-        case PIXELFORMAT_UNCOMPRESSED_R5G6B5:
-        case PIXELFORMAT_UNCOMPRESSED_R5G5B5A1:
-        case PIXELFORMAT_UNCOMPRESSED_R4G4B4A4: bpp = 16; break;
-        case PIXELFORMAT_UNCOMPRESSED_R8G8B8A8: bpp = 32; break;
-        case PIXELFORMAT_UNCOMPRESSED_R8G8B8: bpp = 24; break;
-        case PIXELFORMAT_UNCOMPRESSED_R32: bpp = 32; break;
-        case PIXELFORMAT_UNCOMPRESSED_R32G32B32: bpp = 32*3; break;
-        case PIXELFORMAT_UNCOMPRESSED_R32G32B32A32: bpp = 32*4; break;
-        case PIXELFORMAT_COMPRESSED_DXT1_RGB:
-        case PIXELFORMAT_COMPRESSED_DXT1_RGBA:
-        case PIXELFORMAT_COMPRESSED_ETC1_RGB:
-        case PIXELFORMAT_COMPRESSED_ETC2_RGB:
-        case PIXELFORMAT_COMPRESSED_PVRT_RGB:
-        case PIXELFORMAT_COMPRESSED_PVRT_RGBA: bpp = 4; break;
-        case PIXELFORMAT_COMPRESSED_DXT3_RGBA:
-        case PIXELFORMAT_COMPRESSED_DXT5_RGBA:
-        case PIXELFORMAT_COMPRESSED_ETC2_EAC_RGBA:
-        case PIXELFORMAT_COMPRESSED_ASTC_4x4_RGBA: bpp = 8; break;
-        case PIXELFORMAT_COMPRESSED_ASTC_8x8_RGBA: bpp = 2; break;
+        case RLGL_PIXELFORMAT_UNCOMPRESSED_GRAYSCALE: bpp = 8; break;
+        case RLGL_PIXELFORMAT_UNCOMPRESSED_GRAY_ALPHA:
+        case RLGL_PIXELFORMAT_UNCOMPRESSED_R5G6B5:
+        case RLGL_PIXELFORMAT_UNCOMPRESSED_R5G5B5A1:
+        case RLGL_PIXELFORMAT_UNCOMPRESSED_R4G4B4A4: bpp = 16; break;
+        case RLGL_PIXELFORMAT_UNCOMPRESSED_R8G8B8A8: bpp = 32; break;
+        case RLGL_PIXELFORMAT_UNCOMPRESSED_R8G8B8: bpp = 24; break;
+        case RLGL_PIXELFORMAT_UNCOMPRESSED_R32: bpp = 32; break;
+        case RLGL_PIXELFORMAT_UNCOMPRESSED_R32G32B32: bpp = 32*3; break;
+        case RLGL_PIXELFORMAT_UNCOMPRESSED_R32G32B32A32: bpp = 32*4; break;
+        case RLGL_PIXELFORMAT_COMPRESSED_DXT1_RGB:
+        case RLGL_PIXELFORMAT_COMPRESSED_DXT1_RGBA:
+        case RLGL_PIXELFORMAT_COMPRESSED_ETC1_RGB:
+        case RLGL_PIXELFORMAT_COMPRESSED_ETC2_RGB:
+        case RLGL_PIXELFORMAT_COMPRESSED_PVRT_RGB:
+        case RLGL_PIXELFORMAT_COMPRESSED_PVRT_RGBA: bpp = 4; break;
+        case RLGL_PIXELFORMAT_COMPRESSED_DXT3_RGBA:
+        case RLGL_PIXELFORMAT_COMPRESSED_DXT5_RGBA:
+        case RLGL_PIXELFORMAT_COMPRESSED_ETC2_EAC_RGBA:
+        case RLGL_PIXELFORMAT_COMPRESSED_ASTC_4x4_RGBA: bpp = 8; break;
+        case RLGL_PIXELFORMAT_COMPRESSED_ASTC_8x8_RGBA: bpp = 2; break;
         default: break;
     }
 
@@ -808,8 +808,8 @@ static int get_pixel_data_size(int width, int height, int format)
     // if texture is smaller, minimum dataSize is 8 or 16
     if ((width < 4) && (height < 4))
     {
-        if ((format >= PIXELFORMAT_COMPRESSED_DXT1_RGB) && (format < PIXELFORMAT_COMPRESSED_DXT3_RGBA)) data_size = 8;
-        else if ((format >= PIXELFORMAT_COMPRESSED_DXT3_RGBA) && (format < PIXELFORMAT_COMPRESSED_ASTC_8x8_RGBA)) data_size = 16;
+        if ((format >= RLGL_PIXELFORMAT_COMPRESSED_DXT1_RGB) && (format < RLGL_PIXELFORMAT_COMPRESSED_DXT3_RGBA)) data_size = 8;
+        else if ((format >= RLGL_PIXELFORMAT_COMPRESSED_DXT3_RGBA) && (format < RLGL_PIXELFORMAT_COMPRESSED_ASTC_8x8_RGBA)) data_size = 16;
     }
 
     return data_size;

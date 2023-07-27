@@ -2169,7 +2169,7 @@ void RL_BeginDrawing(void)
 }
 
 // End canvas drawing and swap buffers (double buffering)
-void RL_EndDrawing(void)
+void RL_EndDrawing(bool withImGui)
 {
     rlDrawRenderBatchActive();      // Update and draw internal render batch
 
@@ -2232,7 +2232,7 @@ void RL_EndDrawing(void)
     }
 #endif
 
-	imGuiRender();
+    if (withImGui) { imGuiRender(); }
 
 #if !defined(SUPPORT_CUSTOM_FRAME_CONTROL)
     RL_SwapScreenBuffer();                  // Copy back buffer to front buffer (screen)

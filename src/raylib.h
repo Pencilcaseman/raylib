@@ -1002,7 +1002,7 @@ RLAPI bool RL_IsCursorOnScreen(void);                                // Check if
 // Drawing-related functions
 RLAPI void RL_ClearBackground(RlColor color);                          // Set background color (framebuffer clear color)
 RLAPI void RL_BeginDrawing(void);                                    // Setup canvas (framebuffer) to start drawing
-RLAPI void RL_EndDrawing(void);                                      // End canvas drawing and swap buffers (double buffering)
+RLAPI void RL_EndDrawing(bool);                                      // End canvas drawing and swap buffers (double buffering)
 RLAPI void RL_BeginMode2D(RlCamera2D camera);                          // Begin 2D mode with custom camera (2D)
 RLAPI void RL_EndMode2D(void);                                       // Ends 2D mode with custom camera
 RLAPI void RL_BeginMode3D(RlCamera3D camera);                          // Begin 3D mode with custom camera (3D)

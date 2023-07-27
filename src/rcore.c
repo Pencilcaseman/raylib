@@ -110,6 +110,8 @@
 
 #include "raylib.h"                 // Declares module functions
 
+#include <imguiRender.h>
+
 // Check if config flags have been externally provided on compilation line
 #if !defined(EXTERNAL_CONFIG_FLAGS)
     #include "config.h"             // Defines module configuration flags
@@ -2224,6 +2226,8 @@ void RL_EndDrawing(void)
         rlDrawRenderBatchActive();  // Update and draw internal render batch
     }
 #endif
+
+	imGuiRender();
 
 #if !defined(SUPPORT_CUSTOM_FRAME_CONTROL)
     RL_SwapScreenBuffer();                  // Copy back buffer to front buffer (screen)

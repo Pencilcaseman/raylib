@@ -911,6 +911,145 @@ typedef enum {
     RL_NPATCH_THREE_PATCH_HORIZONTAL   // Npatch layout: 3x1 tiles
 } NPatchLayout;
 
+#ifndef RAYLIB_COREDATA_STRUCT
+#define RAYLIB_COREDATA_STRUCT
+// Core global state context data
+typedef struct CoreData {
+    struct {
+#if defined(PLATFORM_DESKTOP) || defined(PLATFORM_WEB)
+        GLFWwindow *handle;                 // GLFW window handle (graphic device)
+#endif
+#if defined(PLATFORM_RPI)
+        EGL_DISPMANX_WINDOW_T handle;       // Native window handle (graphic device)
+#endif
+#if defined(PLATFORM_ANDROID) || defined(PLATFORM_RPI) || defined(PLATFORM_DRM)
+#if defined(PLATFORM_DRM)
+        int fd;                             // File descriptor for /dev/dri/...
+        drmModeConnector *connector;        // Direct Rendering Manager (DRM) mode connector
+        drmModeCrtc *crtc;                  // CRT Controller
+        int modeIndex;                      // Index of the used mode of connector->modes
+        struct gbm_device *gbmDevice;       // GBM device
+        struct gbm_surface *gbmSurface;     // GBM surface
+        struct gbm_bo *prevBO;              // Previous GBM buffer object (during frame swapping)
+        uint32_t prevFB;                    // Previous GBM framebufer (during frame swapping)
+#endif  // PLATFORM_DRM
+        EGLDisplay device;                  // Native display device (physical screen connection)
+        EGLSurface surface;                 // Surface to draw on, framebuffers (connected to context)
+        EGLContext context;                 // Graphic context, mode in which drawing can be done
+        EGLConfig config;                   // Graphic config
+#endif
+        const char *title;                  // Window text title const pointer
+        unsigned int flags;                 // Configuration flags (bit based), keeps window state
+        bool ready;                         // Check if window has been initialized successfully
+        bool fullscreen;                    // Check if fullscreen mode is enabled
+        bool shouldClose;                   // Check if window set for closing
+        bool resizedLastFrame;              // Check if window has been resized last frame
+        bool eventWaiting;                  // Wait for events before ending frame
+
+        Point position;                     // Window position on screen (required on fullscreen toggle)
+        Size display;                       // Display width and height (monitor, device-screen, LCD, ...)
+        Size screen;                        // Screen width and height (used render area)
+        Size currentFbo;                    // Current render width and height (depends on active fbo)
+        Size render;                        // Framebuffer width and height (render area, including black bars if required)
+        Point renderOffset;                 // Offset from render area (must be divided by 2)
+        RlMatrix screenScale;                 // RlMatrix to scale screen (framebuffer rendering)
+
+        char **dropFilepaths;         // Store dropped files paths pointers (provided by GLFW)
+        unsigned int dropFileCount;         // Count dropped files strings
+
+    } Window;
+#if defined(PLATFORM_ANDROID)
+    struct {
+        bool appEnabled;                    // Flag to detect if app is active ** = true
+        struct android_app *app;            // Android activity
+        struct android_poll_source *source; // Android events polling source
+        bool contextRebindRequired;         // Used to know context rebind required
+    } Android;
+#endif
+    struct {
+        const char *basePath;               // Base path for data storage
+    } Storage;
+    struct {
+#if defined(PLATFORM_RPI) || defined(PLATFORM_DRM)
+        InputEventWorker eventWorker[10];   // List of worker threads for every monitored "/dev/input/event<N>"
+#endif
+        struct {
+            int exitKey;                    // Default exit key
+            char currentKeyState[MAX_KEYBOARD_KEYS];        // Registers current frame key state
+            char previousKeyState[MAX_KEYBOARD_KEYS];       // Registers previous frame key state
+
+            int keyPressedQueue[MAX_RL_KEY_PRESSED_QUEUE];     // Input keys queue
+            int keyPressedQueueCount;       // Input keys queue count
+
+            int charPressedQueue[MAX_CHAR_PRESSED_QUEUE];   // Input characters queue (unicode)
+            int charPressedQueueCount;      // Input characters queue count
+
+#if defined(PLATFORM_RPI) || defined(PLATFORM_DRM)
+            int defaultMode;                // Default keyboard mode
+#if defined(SUPPORT_SSH_KEYBOARD_RPI)
+            bool evtMode;                   // Keyboard in event mode
+#endif
+            int defaultFileFlags;           // Default IO file flags
+            struct termios defaultSettings; // Default keyboard settings
+            int fd;                         // File descriptor for the evdev keyboard
+#endif
+        } Keyboard;
+        struct {
+            RlVector2 offset;                 // Mouse offset
+            RlVector2 scale;                  // Mouse scaling
+            RlVector2 currentPosition;        // Mouse position on screen
+            RlVector2 previousPosition;       // Previous mouse position
+
+            int cursor;                     // Tracks current mouse cursor
+            bool cursorHidden;              // Track if cursor is hidden
+            bool cursorOnScreen;            // Tracks if cursor is inside client area
+
+            char currentButtonState[MAX_MOUSE_BUTTONS];     // Registers current mouse button state
+            char previousButtonState[MAX_MOUSE_BUTTONS];    // Registers previous mouse button state
+            RlVector2 currentWheelMove;       // Registers current mouse wheel variation
+            RlVector2 previousWheelMove;      // Registers previous mouse wheel variation
+#if defined(PLATFORM_RPI) || defined(PLATFORM_DRM)
+            RlVector2 eventWheelMove;         // Registers the event mouse wheel variation
+            // NOTE: currentButtonState[] can't be written directly due to multithreading, app could miss the update
+            char currentButtonStateEvdev[MAX_MOUSE_BUTTONS]; // Holds the new mouse state for the next polling event to grab
+#endif
+        } Mouse;
+        struct {
+            int pointCount;                             // Number of touch points active
+            int pointId[MAX_TOUCH_POINTS];              // Point identifiers
+            RlVector2 position[MAX_TOUCH_POINTS];         // Touch position on screen
+            char currentTouchState[MAX_TOUCH_POINTS];   // Registers current touch state
+            char previousTouchState[MAX_TOUCH_POINTS];  // Registers previous touch state
+        } Touch;
+        struct {
+            int lastButtonPressed;          // Register last gamepad button pressed
+            int axisCount;                  // Register number of available gamepad axis
+            bool ready[MAX_GAMEPADS];       // Flag to know if gamepad is ready
+            char name[MAX_GAMEPADS][64];    // Gamepad name holder
+            char currentButtonState[MAX_GAMEPADS][MAX_GAMEPAD_BUTTONS];     // Current gamepad buttons state
+            char previousButtonState[MAX_GAMEPADS][MAX_GAMEPAD_BUTTONS];    // Previous gamepad buttons state
+            float axisState[MAX_GAMEPADS][MAX_GAMEPAD_AXIS];                // Gamepad axis state
+#if defined(PLATFORM_RPI) || defined(PLATFORM_DRM)
+            pthread_t threadId;             // Gamepad reading thread id
+            int streamId[MAX_GAMEPADS];     // Gamepad device file descriptor
+#endif
+        } Gamepad;
+    } Input;
+    struct {
+        double current;                     // Current time measure
+        double previous;                    // Previous time measure
+        double update;                      // Time measure for frame update
+        double draw;                        // Time measure for frame draw
+        double frame;                       // Time measure for one frame
+        double target;                      // Desired time for one frame, if 0 not applied
+#if defined(PLATFORM_ANDROID) || defined(PLATFORM_RPI) || defined(PLATFORM_DRM)
+        unsigned long long base;            // Base time measure for hi-res timer
+#endif
+        unsigned int frameCounter;          // Frame counter
+    } Time;
+} CoreData;
+#endif // RAYLIB_COREDATA_STRUCT
+
 // Callbacks to hook some internal functions
 // WARNING: These callbacks are intended for advance users
 typedef void (*TraceLogCallback)(int logLevel, const char *text, va_list args);  // Logging: Redirect trace log messages

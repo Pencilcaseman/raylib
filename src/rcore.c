@@ -374,6 +374,8 @@ typedef struct {
 typedef struct { int x; int y; } Point;
 typedef struct { unsigned int width; unsigned int height; } Size;
 
+#ifndef RAYLIB_COREDATA_STRUCT
+#define RAYLIB_COREDATA_STRUCT
 // Core global state context data
 typedef struct CoreData {
     struct {
@@ -509,6 +511,7 @@ typedef struct CoreData {
         unsigned int frameCounter;          // Frame counter
     } Time;
 } CoreData;
+#endif // RAYLIB_COREDATA_STRUCT
 
 //----------------------------------------------------------------------------------
 // Global Variables Definition
@@ -516,11 +519,6 @@ typedef struct CoreData {
 RLAPI const char *raylib_version = RAYLIB_VERSION;  // raylib version exported symbol, required for some bindings
 
 static CoreData CORE = { 0 };               // Global CORE state context
-
-// Get pointer to global CORE state context
-RLAPI CoreData *RL_GetCoreData() {
-    return &CORE;
-}
 
 #if defined(SUPPORT_SCREEN_CAPTURE)
 static int screenshotCounter = 0;           // Screenshots counter
@@ -619,6 +617,11 @@ static bool eventsRecording = false;    // Record events
 //static short eventsEnabled = 0b0000001111111111;    // Events enabled for checking
 #endif
 //-----------------------------------------------------------------------------------
+
+// Get pointer to global CORE state context
+RLAPI CoreData *RL_GetCoreData(void) {
+    return &CORE;
+}
 
 //----------------------------------------------------------------------------------
 // Other Modules Functions Declaration (required by core)

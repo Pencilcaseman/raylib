@@ -110,7 +110,8 @@
 
 #include "raylib.h"                 // Declares module functions
 
-#include <imguiRender.h>
+#define SURGE_IMGUI_COMPAT_NO_GLFW
+#include <imguiCompat.h>
 
 // Check if config flags have been externally provided on compilation line
 #if !defined(EXTERNAL_CONFIG_FLAGS)
@@ -2147,6 +2148,7 @@ bool RL_IsCursorOnScreen(void)
 // Set background color (framebuffer clear color)
 void RL_ClearBackground(RlColor color)
 {
+	glfwMakeContextCurrent(CORE.Window.handle);
     rlClearColor(color.r, color.g, color.b, color.a);   // Set clear color
     rlClearScreenBuffers();                             // Clear current framebuffers
 }
@@ -2154,6 +2156,8 @@ void RL_ClearBackground(RlColor color)
 // Setup canvas (framebuffer) to start drawing
 void RL_BeginDrawing(void)
 {
+	glfwMakeContextCurrent(CORE.Window.handle);
+
     // WARNING: Previously to RL_BeginDrawing() other render textures drawing could happen,
     // consequently the measure for update vs draw is not accurate (only the total frame time is accurate)
 
@@ -2166,12 +2170,18 @@ void RL_BeginDrawing(void)
 
     //rlTranslatef(0.375, 0.375, 0);    // HACK to have 2D pixel-perfect drawing on OpenGL 1.1
                                         // NOTE: Not required with OpenGL 3.3+
+
 }
 
 // End canvas drawing and swap buffers (double buffering)
 void RL_EndDrawing(bool withImGui)
 {
+	// Get current GLFW context
+	GLFWwindow *currentContext = glfwGetCurrentContext();
+	glfwMakeContextCurrent(CORE.Window.handle);
     rlDrawRenderBatchActive();      // Update and draw internal render batch
+	glfwMakeContextCurrent(currentContext);
+	if (withImGui) { imGuiRender(); }
 
 #if defined(SUPPORT_GIF_RECORDING)
     // Draw record indicator
@@ -2231,8 +2241,6 @@ void RL_EndDrawing(bool withImGui)
         rlDrawRenderBatchActive();  // Update and draw internal render batch
     }
 #endif
-
-    if (withImGui) { imGuiRender(); }
 
 #if !defined(SUPPORT_CUSTOM_FRAME_CONTROL)
     RL_SwapScreenBuffer();                  // Copy back buffer to front buffer (screen)
@@ -4292,6 +4300,7 @@ static bool InitGraphicsDevice(int width, int height)
         SetupFramebuffer(CORE.Window.display.width, CORE.Window.display.height);
 
         CORE.Window.handle = glfwCreateWindow(CORE.Window.display.width, CORE.Window.display.height, (CORE.Window.title != 0)? CORE.Window.title : " ", glfwGetPrimaryMonitor(), NULL);
+		glfwMakeContextCurrent(CORE.Window.handle);
 
         // NOTE: Full-screen change, not working properly...
         //glfwSetWindowMonitor(CORE.Window.handle, glfwGetPrimaryMonitor(), 0, 0, CORE.Window.screen.width, CORE.Window.screen.height, GLFW_DONT_CARE);
@@ -4307,6 +4316,7 @@ static bool InitGraphicsDevice(int width, int height)
 #endif
         // No-fullscreen window creation
         CORE.Window.handle = glfwCreateWindow(CORE.Window.screen.width, CORE.Window.screen.height, (CORE.Window.title != 0)? CORE.Window.title : " ", NULL, NULL);
+		glfwMakeContextCurrent(CORE.Window.handle);
 
         if (CORE.Window.handle)
         {
@@ -4315,12 +4325,11 @@ static bool InitGraphicsDevice(int width, int height)
         }
     }
 
-    if (!CORE.Window.handle)
-    {
-        glfwTerminate();
-        TRACELOG(RL_LOG_WARNING, "GLFW: Failed to initialize Window");
-        return false;
-    }
+    if (!CORE.Window.handle) {
+		glfwTerminate();
+		TRACELOG(RL_LOG_WARNING, "GLFW: Failed to initialize Window");
+		return false;
+	}
 
     // Set window callback events
     glfwSetWindowSizeCallback(CORE.Window.handle, WindowSizeCallback);      // NOTE: Resizing not allowed by default!
@@ -4827,6 +4836,9 @@ static bool InitGraphicsDevice(int width, int height)
 #endif
 
     if ((CORE.Window.flags & RL_FLAG_WINDOW_MINIMIZED) > 0) RL_MinimizeWindow();
+
+	// Initialize ImGui
+	imGuiInit(CORE.Window.handle);
 
     return true;
 }

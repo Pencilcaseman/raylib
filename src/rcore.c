@@ -967,6 +967,8 @@ void RL_InitWindow(int width, int height, const char *title)
 // Close window and unload OpenGL context
 void RL_CloseWindow(void)
 {
+	cleanupImGui();
+
 #if defined(SUPPORT_GIF_RECORDING)
     if (gifRecording)
     {
